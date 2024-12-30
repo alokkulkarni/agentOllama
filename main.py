@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import requests
+import logging
 
 from langchain_ollama import ChatOllama
 from langchain_core.tools import tool
@@ -8,6 +9,9 @@ from langchain_core.prompts.chat import SystemMessagePromptTemplate
 from langchain_core.prompts import PromptTemplate
 from langchain import hub
 from langchain.agents import create_tool_calling_agent, AgentExecutor, create_react_agent
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 app = FastAPI()
 
@@ -120,10 +124,13 @@ agent_executor = AgentExecutor(
 @app.post("/banking-agent/")
 async def handle_query(query: str):
     try:
+        logging.debug(f"Received query: {query}")
         # Run agent
         response = agent_executor.invoke(
             {"input": query}
         )
+        logging.debug(f"Agent response: {response}")
         return {"response": response["output"]}
     except Exception as e:
+        logging.error(f"Error handling query: {e}")
         raise HTTPException(status_code=500, detail=str(e))
